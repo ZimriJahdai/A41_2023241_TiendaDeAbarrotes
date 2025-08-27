@@ -60,10 +60,10 @@ public class ConsoleMenu {
     private int obtenerOpcion() {
         try {
             int option = scanner.nextInt();
-            scanner.nextLine(); // Limpiar buffer
+            scanner.nextLine();
             return option;
         } catch (Exception e) {
-            scanner.nextLine(); // Limpiar buffer
+            scanner.nextLine();
             return -1;
         }
     }
@@ -202,14 +202,14 @@ public class ConsoleMenu {
         Double valorTotal = productoService.obtenerValorTotalInventario();
         System.out.printf("Valor total del inventario: $%.2f%n", valorTotal);
     }
-    // En ConsoleMenu.java - Agrega este nuevo método
+
     private void editarProductoCompleto() {
         System.out.println("\n--- ✏️ EDITAR PRODUCTO COMPLETO ---");
         System.out.print("Ingrese el código actual del producto: ");
         String codigoActual = scanner.nextLine().toLowerCase();
 
         try {
-            // Buscar el producto actual para mostrar sus datos
+
             Optional<producto> productoOpt = productoService.buscarProductoPorCodigo(codigoActual);
             if (productoOpt.isEmpty()) {
                 System.out.println(" Producto no encontrado");
