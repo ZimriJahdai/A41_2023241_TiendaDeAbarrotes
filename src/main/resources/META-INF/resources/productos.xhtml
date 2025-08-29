@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <title>Gestión de Productos</title>
+    <style>
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .actions-column {
+            width: 150px;
+            text-align: center;
+        }
+        .dialog-footer {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .dialog-footer button {
+            margin-left: 10px;
+        }
+    </style>
+</h:head>
+<h:body>
+    <div class="container">
+        <p:button outcome="index" value="Volver al Inicio" />
+
+        <h1>Gestión de Productos</h1>
+
+        <p:growl id="messages" showDetail="true" />
+
+        <h:form id="mainForm">
+            <p:dataTable value="#{productoController.obtenerTodosProductos()}" var="producto"
+                         paginator="true" rows="5" paginatorPosition="bottom">
+                <p:column headerText="Código">
+                    <h:outputText value="#{producto.codigo}" />
+                </p:column>
+                <p:column headerText="Nombre">
+                    <h:outputText value="#{producto.nombre}" />
+                </p:column>
+                <p:column headerText="Precio">
+                    <h:outputText value="#{producto.precio}">
+                        <f:convertNumber type="currency" currencySymbol="$" />
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Cantidad">
+                    <h:outputText value="#{producto.cantidad}" />
+                </p:column>
+                <p:column headerText="Acciones" styleClass="actions-column">
+                    <p:commandButton icon="pi pi-pencil" title="Editar"
+                                     oncomplete="PF('dialogEditar').show()"
+                                     update=":editForm">
+                        <f:setPropertyActionListener value="#{producto}"
+                                                     target="#{productoController.productoSeleccionado}" />
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-trash" title="Eliminar"
+                                     action="#{productoController.eliminarProducto()}"
+                                     onclick="if(confirm('¿Está seguro de eliminar el producto #{producto.nombre}?')) {
+                                         #{productoController.prepararEliminacion(producto.codigo)};
+                                         return true;
+                                     } else {
+                                         return false;
+                                     }"
+                                     update="messages, mainForm" />
+                </p:column>
+            </p:dataTable>
+
+            <p:commandButton value="Agregar Producto" icon="pi pi-plus"
+                             oncomplete="PF('dialogAgregar').show()" />
+        </h:form>
+
+        <!-- Diálogo para agregar producto -->
+        <p:dialog header="Agregar Producto" widgetVar="dialogAgregar" modal="true" resizable="false">
+            <h:form id="addForm">
+                <div class="form-group">
+                    <p:outputLabel for="codigo" value="Código:" />
+                    <p:inputText id="codigo" value="#{productoController.nuevoProducto.codigo}" required="true" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="nombre" value="Nombre:" />
+                    <p:inputText id="nombre" value="#{productoController.nuevoProducto.nombre}" required="true" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="precio" value="Precio:" />
+                    <p:inputNumber id="precio" value="#{productoController.nuevoProducto.precio}"
+                                   required="true" minValue="0" decimalPlaces="2" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="cantidad" value="Cantidad:" />
+                    <p:inputNumber id="cantidad" value="#{productoController.nuevoProducto.cantidad}"
+                                   required="true" integerOnly="true" minValue="0" />
+                </div>
+
+                <div class="dialog-footer">
+                    <p:commandButton value="Guardar" action="#{productoController.añadirProducto}"
+                                     update="messages, mainForm"
+                                     oncomplete="if (!args.validationFailed) PF('dialogAgregar').hide()" />
+                    <p:commandButton value="Cancelar" onclick="PF('dialogAgregar').hide()" type="button" />
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Diálogo para editar producto -->
+        <p:dialog header="Editar Producto" widgetVar="dialogEditar" modal="true" resizable="false">
+            <h:form id="editForm">
+                <div class="form-group">
+                    <p:outputLabel for="editCodigo" value="Código:" />
+                    <p:inputText id="editCodigo" value="#{productoController.productoSeleccionado.codigo}"
+                                 required="true" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="editNombre" value="Nombre:" />
+                    <p:inputText id="editNombre" value="#{productoController.productoSeleccionado.nombre}"
+                                 required="true" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="editPrecio" value="Precio:" />
+                    <p:inputNumber id="editPrecio" value="#{productoController.productoSeleccionado.precio}"
+                                   required="true" minValue="0" decimalPlaces="2" />
+                </div>
+
+                <div class="form-group">
+                    <p:outputLabel for="editCantidad" value="Cantidad:" />
+                    <p:inputNumber id="editCantidad" value="#{productoController.productoSeleccionado.cantidad}"
+                                   required="true" integerOnly="true" minValue="0" />
+                </div>
+
+                <div class="dialog-footer">
+                    <p:commandButton value="Actualizar" action="#{productoController.actualizarProducto}"
+                                     update="messages, mainForm"
+                                     oncomplete="if (!args.validationFailed) PF('dialogEditar').hide()" />
+                    <p:commandButton value="Cancelar" onclick="PF('dialogEditar').hide()" type="button" />
+                </div>
+            </h:form>
+        </p:dialog>
+    </div>
+</h:body>
+</html>

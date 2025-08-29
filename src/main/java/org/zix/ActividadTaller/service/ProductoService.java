@@ -95,4 +95,8 @@ public class ProductoService {
 
         return productoRepository.save(producto);
     }
+    // En ProductoService.java, agrega este método:
+    public Optional<producto> buscarProductoPorId(Long id) {
+        return productoRepository.findById(id);
+    }
 }

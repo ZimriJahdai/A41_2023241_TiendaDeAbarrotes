@@ -2,9 +2,16 @@
 create database TiendaAbarrotes;
 use TiendaAbarrotes;
 
+CREATE TABLE cliente (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    telefono VARCHAR(20),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 create table Producto (
-    id bigint primary key auto_increment,
+    id int primary key auto_increment,
     codigo varchar(50) not null unique,
     nombre varchar(255) not null,
     precio double not null,
@@ -13,14 +20,12 @@ create table Producto (
     fecha_actualizacion timestamp default current_timestamp on update current_timestamp
 );
 
-
 create index idx_productos_codigo on Producto(codigo);
 create index idx_productos_nombre on Producto(nombre);
 
-
 create table historial_inventario (
-    id bigint primary key auto_increment,
-    producto_id bigint not null,
+    id int primary key auto_increment,
+    producto_id int not null,
     tipo_movimiento varchar(20) not null,
     cantidad_anterior int not null,
     cantidad_nueva int not null,
@@ -32,23 +37,23 @@ create table historial_inventario (
 );
 
 create table ventas (
-    id bigint primary key auto_increment,
+    id int primary key auto_increment,
     fecha_venta timestamp default current_timestamp,
-    total_venta decimal(10,2) not null
+    total_venta decimal(10,2) not null,
+    cliente_id int null,
+    foreign key (cliente_id) references cliente(id)
 );
 
-
 create table detalles_venta (
-    id bigint primary key auto_increment,
-    venta_id bigint not null,
-    producto_id bigint not null,
+    id int primary key auto_increment,
+    venta_id int not null,
+    producto_id int not null,
     cantidad int not null,
     precio_unitario decimal(10,2) not null,
     subtotal decimal(10,2) not null,
     foreign key (venta_id) references ventas(id),
     foreign key (producto_id) references Producto(id)
 );
-
 
 create view vw_inventario_actual as
 select 
@@ -61,7 +66,6 @@ select
 from producto p
 order by p.nombre;
 
-
 create view vw_productos_stock_bajo as
 select 
     codigo,
@@ -70,7 +74,6 @@ select
     cantidad
 from producto
 where cantidad < 10;
-
 
 insert into Producto (codigo, nombre, precio, cantidad) values
 ('elec001', 'laptop dell xps 15', 2500.00, 15),
@@ -91,14 +94,15 @@ insert into Producto (codigo, nombre, precio, cantidad) values
 
 select * from Producto;
 
+INSERT INTO cliente (nombre, email, telefono) VALUES
+('Cliente General', 'cliente.general@tienda.com', '000-0000');
+
 insert into historial_inventario (producto_id, tipo_movimiento, cantidad_anterior, cantidad_nueva, precio_anterior, precio_nuevo, descripcion) values
 (1, 'entrada_stock', 0, 15, 0.00, 2500.00, 'carga inicial de inventario'),
 (2, 'entrada_stock', 0, 25, 0.00, 450.00, 'carga inicial de inventario'),
 (3, 'entrada_stock', 0, 30, 0.00, 120.00, 'carga inicial de inventario'),
 (4, 'entrada_stock', 0, 40, 0.00, 80.00, 'carga inicial de inventario'),
 (5, 'entrada_stock', 0, 20, 0.00, 350.00, 'carga inicial de inventario');
-
-
 
 delimiter $$
 create procedure sp_actualizar_stock(
@@ -107,12 +111,12 @@ create procedure sp_actualizar_stock(
     in p_tipo_movimiento varchar(20)
 )
 begin
-    declare v_producto_id bigint;
+    declare v_producto_id int;
     declare v_cantidad_actual int;
     declare v_nueva_cantidad int;
     
     select id, cantidad into v_producto_id, v_cantidad_actual 
-    from productos where codigo = p_codigo;
+    from Producto where codigo = p_codigo;
     
     if v_producto_id is null then
         signal sqlstate '45000' set message_text = 'producto no encontrado';
@@ -129,7 +133,7 @@ begin
         signal sqlstate '45000' set message_text = 'tipo de movimiento no válido';
     end if;
     
-    update productos set cantidad = v_nueva_cantidad where id = v_producto_id;
+    update Producto set cantidad = v_nueva_cantidad where id = v_producto_id;
     
     insert into historial_inventario (producto_id, tipo_movimiento, cantidad_anterior, cantidad_nueva, descripcion)
     values (v_producto_id, p_tipo_movimiento, v_cantidad_actual, v_nueva_cantidad, 
@@ -137,21 +141,20 @@ begin
 end $$
 delimiter ;
 
-
 delimiter $$
 create procedure sp_registrar_venta(
     in p_codigo_producto varchar(50),
     in p_cantidad_vendida int
 )
 begin
-    declare v_producto_id bigint;
+    declare v_producto_id int;
     declare v_precio_unitario decimal(10,2);
     declare v_stock_actual int;
-    declare v_venta_id bigint;
+    declare v_venta_id int;
     declare v_subtotal decimal(10,2);
     
     select id, precio, cantidad into v_producto_id, v_precio_unitario, v_stock_actual
-    from productos where codigo = p_codigo_producto;
+    from Producto where codigo = p_codigo_producto;
     
     if v_producto_id is null then
         signal sqlstate '45000' set message_text = 'producto no encontrado';
@@ -161,20 +164,15 @@ begin
         signal sqlstate '45000' set message_text = 'stock insuficiente para la venta';
     end if;
     
-
-    insert into ventas (total_venta) values (0);
+    insert into ventas (total_venta, cliente_id) values (0, 1);
     set v_venta_id = last_insert_id();
     
-
     set v_subtotal = v_precio_unitario * p_cantidad_vendida;
     
-   
     insert into detalles_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal)
     values (v_venta_id, v_producto_id, p_cantidad_vendida, v_precio_unitario, v_subtotal);
     
-    
     update ventas set total_venta = v_subtotal where id = v_venta_id;
-    
     
     call sp_actualizar_stock(p_codigo_producto, p_cantidad_vendida, 'salida');
     
@@ -182,18 +180,16 @@ begin
 end $$
 delimiter ;
 
-
 delimiter $$
 create function fn_valor_total_inventario() returns decimal(10,2)
 deterministic
 reads sql data
 begin
     declare total decimal(10,2);
-    select sum(precio * cantidad) into total from productos;
+    select sum(precio * cantidad) into total from Producto;
     return coalesce(total, 0);
 end $$
 delimiter ;
-
 
 delimiter $$
 create function fn_obtener_stock(p_codigo varchar(50)) returns int
@@ -201,7 +197,7 @@ deterministic
 reads sql data
 begin
     declare v_stock int;
-    select cantidad into v_stock from productos where codigo = p_codigo;
+    select cantidad into v_stock from Producto where codigo = p_codigo;
     return coalesce(v_stock, 0);
 end $$
 delimiter ;

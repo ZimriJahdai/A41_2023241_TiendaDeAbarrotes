@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <title>Tienda de Abarrotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .welcome-section {
+            background-color: white;
+            padding: 30px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .big-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .client-button {
+            background-color: #2196F3;
+            color: white;
+        }
+        .product-button {
+            background-color: #FF9800;
+            color: white;
+        }
+        .big-button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</h:head>
+<h:body>
+    <div class="container">
+        <div class="header">
+            <h1>Tienda de Abarrotes "El Buen Precio"</h1>
+        </div>
+
+        <div class="welcome-section">
+            <h2>Bienvenido a nuestro sistema de gestión</h2>
+            <p>Somos una tienda de abarrotes comprometida con ofrecer los mejores productos a precios accesibles.
+                En nuestro sistema podrás gestionar el inventario de productos y atender a nuestros clientes de manera eficiente.</p>
+            <p>Contamos con una amplia variedad de productos de alta calidad para satisfacer todas tus necesidades.</p>
+        </div>
+
+        <div class="button-container">
+            <p:button outcome="clientes" value="Gestión de Clientes" styleClass="big-button client-button" />
+            <p:button outcome="productos" value="Gestión de Productos" styleClass="big-button product-button" />
+        </div>
+    </div>
+</h:body>
+</html>
